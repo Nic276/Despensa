@@ -1,6 +1,0 @@
-{
-  "name": "PantryControl",
-  "description": "Una aplicación de gestión de despensa inteligente con Soft UI y generación de imágenes por IA. Sincroniza tu inventario en la nube y optimiza tus compras.",
-  "requestFramePermissions": ["camera"],
-  "majorCapabilities": ["Real Photography", "Cloud Sync"]
-}
