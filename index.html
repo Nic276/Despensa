@@ -1,14 +1,376 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-    <script type="module" crossorigin src="/assets/index-BoWAL9UL.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DRpbnLlU.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
-</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Generador de Boletín Técnico de Taller (TSB)</title>
+<style>
+  :root{
+    --rojo: #C8102E;
+    --rojo-oscuro: #a10d25;
+    --negro-header: #1c2733;
+    --gris-borde: #d9d9d9;
+    --gris-fondo: #f7f7f7;
+    --texto: #222;
+  }
 
+  * { box-sizing: border-box; }
+
+  body{
+    font-family: Arial, Helvetica, sans-serif;
+    background: #e7e7e7;
+    margin: 0;
+    padding: 0;
+    color: var(--texto);
+  }
+
+  #toolbar{
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--negro-header);
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  #toolbar h2{
+    margin: 0;
+    font-size: 15px;
+    font-weight: normal;
+    opacity: .85;
+  }
+  #toolbar .botones{ display:flex; gap:8px; flex-wrap: wrap;}
+  #toolbar button{
+    background: var(--rojo);
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+  }
+  #toolbar button:hover{ background: var(--rojo-oscuro); }
+  #toolbar button.secundario{ background:#3a4a5c; }
+  #toolbar button.secundario:hover{ background:#2a3846; }
+
+  #hoja{
+    max-width: 900px;
+    margin: 25px auto 60px;
+    background: #fff;
+    box-shadow: 0 0 12px rgba(0,0,0,.25);
+    padding-bottom: 30px;
+  }
+
+  .header-rojo{
+    background: var(--rojo);
+    color: #fff;
+    padding: 22px 30px 18px;
+  }
+  .header-rojo .titulo-doc{
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: .5px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    width: 100%;
+    font-family: inherit;
+  }
+  .header-rojo .subtitulo-doc{
+    font-size: 13px;
+    letter-spacing: .5px;
+    background: transparent;
+    border: none;
+    color: #fdd;
+    width: 100%;
+    margin-top: 4px;
+    font-family: inherit;
+    text-transform: uppercase;
+  }
+  .header-rojo input::placeholder{ color: #ffdada; }
+
+  .info-tabla{
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+  }
+  .info-tabla td{
+    border: 1px solid var(--gris-borde);
+    padding: 10px 14px;
+    font-size: 13px;
+    vertical-align: top;
+    width: 25%;
+  }
+  .info-tabla td.etiqueta{
+    background: var(--gris-fondo);
+    font-weight: bold;
+    color: #333;
+    width: 15%;
+  }
+  .info-tabla input{
+    width: 100%;
+    border: none;
+    font-size: 13px;
+    font-family: inherit;
+    background: transparent;
+  }
+  .info-tabla input:focus{ outline: 1px dashed var(--rojo); }
+
+  .contenido{ padding: 6px 30px 0; }
+
+  .seccion{ margin-top: 26px; }
+  .seccion h3{
+    color: var(--rojo);
+    border-bottom: 2px solid var(--rojo);
+    padding-bottom: 6px;
+    font-size: 16px;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .seccion h3 input{
+    border: none;
+    color: var(--rojo);
+    font-size: 16px;
+    font-weight: bold;
+    font-family: inherit;
+    flex: 1;
+    background: transparent;
+    text-transform: uppercase;
+  }
+  .seccion h3 input:focus{ outline: 1px dashed var(--rojo); }
+
+  textarea{
+    width: 100%;
+    border: 1px solid var(--gris-borde);
+    border-radius: 3px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 13.5px;
+    line-height: 1.5;
+    resize: vertical;
+    color: var(--texto);
+  }
+  textarea:focus{ outline: 1px dashed var(--rojo); }
+
+  .nota-tecnica{
+    background: #fdecec;
+    border-left: 4px solid var(--rojo);
+    padding: 10px 14px;
+    margin-top: 12px;
+    font-size: 13.5px;
+  }
+  .nota-tecnica strong{ color: var(--rojo-oscuro); }
+  .nota-tecnica textarea{ background: transparent; border: none; padding: 4px 0; }
+
+  ol.pasos{ margin: 0; padding-left: 22px; }
+  ol.pasos li{ margin-bottom: 10px; display:flex; gap:6px; align-items:flex-start;}
+  ol.pasos li textarea{ flex:1; }
+  .fila-btns{ margin-top: 8px; }
+  .btn-mini{
+    background: #eee;
+    border: 1px solid var(--gris-borde);
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-right: 6px;
+  }
+  .btn-mini:hover{ background: #ddd; }
+  .btn-quitar{ background:#f8d7d7; border-color:#e2a6a6; color:#a10d25; padding: 3px 8px; cursor:pointer; border-radius:3px; font-size:12px;}
+
+  .subseccion{ margin-top: 18px; }
+  .subseccion h4{
+    font-size: 13.5px;
+    margin: 0 0 6px;
+    color: #333;
+  }
+  .subseccion h4 input{
+    border: none;
+    font-weight: bold;
+    font-size: 13.5px;
+    font-family: inherit;
+    background: transparent;
+    width: 100%;
+  }
+  .subseccion h4 input:focus{ outline: 1px dashed var(--rojo); }
+
+  .footer-doc{
+    margin-top: 30px;
+    padding: 14px 30px 0;
+    border-top: 1px solid var(--gris-borde);
+    font-size: 11.5px;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer-doc input{
+    border: none;
+    background: transparent;
+    font-size: 11.5px;
+    color: #666;
+    font-family: inherit;
+    width: 70%;
+  }
+
+  @media print{
+    body{ background: #fff; }
+    #toolbar{ display: none !important; }
+    #hoja{
+      box-shadow: none;
+      margin: 0;
+      max-width: 100%;
+    }
+    textarea, input{
+      border: none !important;
+      outline: none !important;
+      resize: none;
+    }
+    .btn-mini, .btn-quitar, .fila-btns{ display: none !important; }
+    .seccion{ page-break-inside: avoid; }
+    textarea{ overflow: hidden; }
+    .header-rojo .titulo-doc,
+    .header-rojo .subtitulo-doc{
+      color: #000 !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <h2>Generador de Boletín Técnico de Taller (TSB) — plantilla editable</h2>
+  <div class="botones">
+    <button class="secundario" onclick="agregarPaso()">+ Paso (Sección 3)</button>
+    <button class="secundario" onclick="restablecer()">Restablecer plantilla</button>
+    <button onclick="imprimirConNombre()">🖨 Imprimir / Guardar como PDF</button>
+  </div>
+</div>
+
+<div id="hoja">
+
+  <div class="header-rojo">
+    <input class="titulo-doc" value="BOLETÍN TÉCNICO DE TALLER (TSB INTERNO)">
+    <input class="subtitulo-doc" value="TITULO DEL CASO">
+  </div>
+
+  <table class="info-tabla">
+    <tr>
+      <td class="etiqueta">REFERENCIA:</td>
+      <td><input id="campo-referencia" value="TSB-MODELO-AREA"></td>
+      <td class="etiqueta">FECHA:</td>
+      <td><input value="DIA/MES/AÑO"></td>
+    </tr>
+    <tr>
+      <td class="etiqueta">MODELO:</td>
+      <td><input value="MARCA-COD MODELO"></td>
+      <td class="etiqueta">MÓDULO:</td>
+      <td><input value="MODULO AFECTADO O AREA"></td>
+    </tr>
+    <tr>
+      <td class="etiqueta">AÑOS:</td>
+      <td><input value="AÑO DE PRODUCCION"></td>
+      <td class="etiqueta">MERCADO:</td>
+      <td><input value="PAIS DE FABRICACION"></td>
+    </tr>
+  </table>
+
+  <div class="contenido">
+
+    <div class="seccion">
+      <h3>1. <input value="CONDICIÓN Y SÍNTOMA REPORTADO"></h3>
+      <textarea rows="3">CONDICION DEL CASO Y SINTOMAS ASOCIADOS.</textarea>
+    </div>
+
+    <div class="seccion">
+      <h3>2. <input value="CAUSA RAÍZ TÉCNICA"></h3>
+      <textarea rows="3">DETALLES TECNICOS QUE ORIGINAL EL PROBLEMA.</textarea>
+
+      <div class="nota-tecnica">
+        <strong>Nota Técnica:</strong>
+        <textarea rows="2">INFORMACION DE APOYO CON REFERENCIA AL CASO.</textarea>
+      </div>
+    </div>
+
+    <div class="seccion">
+      <h3>3. <input value="PROCEDIMIENTO DE DIAGNÓSTICO SEGURO"></h3>
+      <textarea rows="2">INDICAR HERRAMIENTAS NECESARIAS PARA EL DIAGNOSTICO.</textarea>
+      <ol class="pasos" id="lista-pasos">
+        <li><textarea rows="1">PASO A PASO DETALLADO PARA EL DIAGNOSTICO SEGURO.</textarea><span class="btn-quitar" onclick="quitarLi(this)">✕</span></li>
+      </ol>
+      <div class="fila-btns"><button class="btn-mini" onclick="agregarPaso()">+ agregar paso</button></div>
+    </div>
+
+    <div class="seccion">
+      <h3>4. <input value="PROCEDIMIENTO DE SOLUCIÓN DEFINITIVA"></h3>
+      <textarea rows="3">PROCEDIMIENTO PARA LA CORRECCION.</textarea>
+
+      <div class="subseccion">
+        <h4><input value="4.1. Verificación de la reparación."></h4>
+        <textarea rows="2">QUE SE REALIZO PARA VERIFICAR QUE EL PROBLEMA FUE RESUELTO.</textarea>
+      </div>
+    </div>
+
+    <div class="seccion">
+      <h3>5. <input value="REEMPLAZO DE COMPONENTES ASOCIADOS"></h3>
+      <textarea rows="3">EN CASO DE SER NECESARIO, INDICAR QUE ELEMENTOS FUERON REEMPLAZADOS COMO DAÑO COLATERAL AL PROBLEMA INICIAL.</textarea>
+    </div>
+
+  </div>
+
+  <div class="footer-doc">
+    <input value="Documento técnico elaborado para uso interno en taller y referencia de servicio técnico automotriz.">
+    <span>Página 1 de 1</span>
+  </div>
+
+</div>
+
+<script>
+function autoAjustar(ta){
+  ta.style.height = 'auto';
+  ta.style.height = (ta.scrollHeight) + 'px';
+}
+document.querySelectorAll('textarea').forEach(function(ta){
+  autoAjustar(ta);
+  ta.addEventListener('input', function(){ autoAjustar(ta); });
+});
+
+function agregarPaso(){
+  var lista = document.getElementById('lista-pasos');
+  var li = document.createElement('li');
+  li.innerHTML = '<textarea rows="1"></textarea><span class="btn-quitar" onclick="quitarLi(this)">✕</span>';
+  lista.appendChild(li);
+  var ta = li.querySelector('textarea');
+  ta.addEventListener('input', function(){ autoAjustar(ta); });
+  ta.focus();
+}
+function quitarLi(el){
+  el.parentElement.remove();
+}
+
+var tituloOriginal = document.title;
+
+function imprimirConNombre(){
+  var ref = document.getElementById('campo-referencia').value.trim();
+  // Se limpian caracteres no permitidos en nombres de archivo
+  var nombreLimpio = ref.replace(/[\\/:*?"<>|]+/g, '-');
+  document.title = nombreLimpio || tituloOriginal;
+  window.print();
+  // Se restaura el título de la pestaña luego de imprimir
+  setTimeout(function(){ document.title = tituloOriginal; }, 500);
+}
+
+function restablecer(){
+  if(confirm('¿Recargar la plantilla y perder los cambios actuales?')){
+    location.reload();
+  }
+}
+</script>
+
+</body>
+</html>
